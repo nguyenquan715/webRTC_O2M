@@ -35,12 +35,16 @@ var rooms = {}
 io.on('connection', (socket) => {
     console.log('Client connected: ', socket.id);
     socket.on('broadcaster-join', (roomId) => {    
-        socket.join(roomId);
         if(!rooms[roomId]){
             rooms[roomId] = {};
         }
+        if(rooms[roomId]['broadcaster']) {
+            socket.emit('over-broadcaster');
+            return;
+        }
         rooms[roomId]['broadcaster'] = socket.id;
-        const viewers = rooms[roomId]['viewers'];
+        socket.join(roomId);
+        const viewers = rooms[roomId]['viewers'];        
         if(viewers) {
             viewers.forEach(viewer => {
                 socket.to(viewer).emit('broadcaster-join', socket.id);
@@ -52,10 +56,9 @@ io.on('connection', (socket) => {
         socket.join(roomId);
         if(!rooms[roomId]){
             rooms[roomId] = {};
-        }
-        let viewers = rooms[roomId]['viewers'];
-        if(!viewers) viewers = [];
-        viewers.push(socket.id);
+        }        
+        if(!rooms[roomId]['viewers']) rooms[roomId]['viewers'] = [];
+        rooms[roomId]['viewers'].push(socket.id);        
         let broadcaster = rooms[roomId]['broadcaster'];
         if(broadcaster) {
             socket.to(broadcaster).emit('viewer-join', socket.id);

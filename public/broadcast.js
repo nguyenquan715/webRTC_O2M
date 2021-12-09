@@ -1,10 +1,10 @@
-console.log(ROOM_ID);
 var peerConnections = {};
 var videoGrid;
 var localVideo;
 var localStream;
+var stopVideoBtn;
 
-const constraints = {
+var constraints = {
     video: true,
     audio: true
 };
@@ -12,7 +12,23 @@ const constraints = {
 window.onload = async () => {     
     videoGrid = document.getElementById('video-grid');
     localVideo = document.createElement('video');
-    localVideo.className = 'local-video';               
+    localVideo.className = 'local-video';  
+    stopVideoBtn = document.getElementById('stop-video');
+    stopVideoBtn.onclick = () => {
+        console.log('Stop video');
+        constraints = {
+            video: false,
+            audio: true
+        }
+        for(key in peerConnections) {
+            let peerConnection = peerConnections[key];
+            peerConnection.getSenders().forEach(sender => {
+                if(sender.track.kind == 'video') {
+                    peerConnection.removeTrack(sender);
+                }
+            })
+        }
+    }
 };
 
 window.onunload = window.onbeforeunload = () => {
@@ -62,6 +78,10 @@ socket.on('candidate', ({candidate, sender}) => {
     peerConnections[sender].addIceCandidate(new RTCIceCandidate(candidate));
 });
 
+socket.on('over-broadcaster', () => {
+    alert('This room had one broadcaster already');
+});
+
 /**
  * Function
  */
@@ -84,7 +104,7 @@ const createOffer = async (peerConnection, receiver) => {
     const offer = await peerConnection.createOffer();
     await peerConnection.setLocalDescription(new RTCSessionDescription(offer));
     socket.emit('offer', {
-        offer: peerConnection.setLocalDescription,
+        offer: peerConnection.localDescription,
         receiver: receiver
     });
 }

@@ -84,6 +84,11 @@ video {
   font-size: 1.2rem;
   width: 50px;
   margin: 0 0.5rem;
+  cursor: pointer;
+}
+
+.options-button:hover {
+  background-color: #f6484a;
 }
 
 .background-red {

@@ -1,23 +1,19 @@
 var peerConnection = new RTCPeerConnection();
-//Catch event of peer connection
-peerConnection.ontrack = event => {
-    console.log('On track: ', event.track.kind);
-    if (!remoteVideo.srcObject) {
-        const remoteStream = event.streams[0];
-        addVideoStream(remoteVideo, remoteStream);
-    }
-}    
-peerConnection.onconnectionstatechange = () => {
-    console.log('Connection state of viewer and broadcaster: ', peerConnection.connectionState);
-}
-
 var videoGrid;
 var remoteVideo;
 
 window.onload = () => {
     videoGrid = document.getElementById('video-grid');    
-    remoteVideo = document.createElement('video');    
-    remoteVideo.className = 'remote-video';
+    remoteVideo = document.getElementById('remote-video');
+
+    //Catch event of peer connection
+    peerConnection.ontrack = (event) => {
+        console.log('On track: ', event.track.kind);
+        remoteVideo.srcObject = event.streams[0];    
+    }    
+    peerConnection.onconnectionstatechange = () => {
+        console.log('Connection state of viewer and broadcaster: ', peerConnection.connectionState);
+    }
 };
 
 window.onunload = window.onbeforeunload = () => {
@@ -58,15 +54,3 @@ socket.on('offer', async ({offer, sender}) => {
 socket.on('candidate', ({candidate}) => {
     peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
 });
-
-/**
- * Function
- */
-const addVideoStream = (video, stream) => {
-    video.srcObject = stream;
-    video.addEventListener('loadedmetadata', () => {
-        video.play();
-        videoGrid.append(video);
-    });
-}
-
